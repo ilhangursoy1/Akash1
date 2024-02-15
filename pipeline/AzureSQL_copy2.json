@@ -1,0 +1,60 @@
+{
+	"name": "AzureSQL_copy2",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "dataflow1",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"source1": {
+								"schemaname": "Sales",
+								"tablename": "Orders"
+							},
+							"source2": {
+								"schemaname": "Sales",
+								"tablename": "Customers"
+							},
+							"sink1": {
+								"container": "sqloutput",
+								"filename": "dataflow.csv",
+								"foldername": "dataflow"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"tablename": {
+				"type": "string"
+			},
+			"schemaname": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ilhan/Day 2 - 140224"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-02-14T13:36:40Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

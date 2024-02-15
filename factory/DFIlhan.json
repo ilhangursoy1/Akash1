@@ -1,0 +1,9 @@
+{
+	"name": "DFIlhan",
+	"location": "uksouth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "d7e9f14c-62f3-4309-a1de-8c5454471e97",
+		"tenantId": "bd8f356c-098f-4bf3-b9f6-c20fcedddbe1"
+	}
+}
