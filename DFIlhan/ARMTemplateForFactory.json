@@ -1,0 +1,846 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "DFIlhan"
+		},
+		"LS_ADLS_CSV_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'LS_ADLS_CSV'"
+		},
+		"LS_ASQL_Source_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_ASQL_Source'"
+		},
+		"LS_ADLS_CSV_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://sailhan.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSQL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "SELECT [OrderID]\n      --,so.[CustomerID]\n\t  ,sc.CustomerName\n      ,[SalespersonPersonID]\n      ,[PickedByPersonID]\n      ,[ContactPersonID]\n      ,[BackorderOrderID]\n      ,[OrderDate]\n      ,[ExpectedDeliveryDate]\n      ,[CustomerPurchaseOrderNumber]\n      ,[IsUndersupplyBackordered]\n      ,[Comments]\n      ,[DeliveryInstructions]\n      ,[InternalComments]\n      ,[PickingCompletedWhen]\n      ,so.[LastEditedBy]\n      ,[LastEditedWhen]\n  FROM [Sales].[Orders] so\n  left join Sales.Customers sc\n  on so.CustomerID = sc.CustomerID",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ASQL_Source",
+								"type": "DatasetReference",
+								"parameters": {
+									"schemaname": {
+										"value": "@pipeline().parameters.schemaname",
+										"type": "Expression"
+									},
+									"tablename": {
+										"value": "@pipeline().parameters.tablename",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "sqloutput",
+									"filename": {
+										"value": "@{pipeline().parameters.tablename}.csv",
+										"type": "Expression"
+									},
+									"foldername": {
+										"value": "@pipeline().parameters.schemaname",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"tablename": {
+						"type": "string"
+					},
+					"schemaname": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ilhan/Day 2 - 140224"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-02-14T13:10:38Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_ASQL_Source')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_CSV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSQL_copy1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "dbo.salesorders",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ASQL_Source",
+								"type": "DatasetReference",
+								"parameters": {
+									"schemaname": {
+										"value": "@pipeline().parameters.schemaname",
+										"type": "Expression"
+									},
+									"tablename": {
+										"value": "@pipeline().parameters.tablename",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "sqloutput",
+									"filename": {
+										"value": "@{pipeline().parameters.tablename}.csv",
+										"type": "Expression"
+									},
+									"foldername": {
+										"value": "@pipeline().parameters.schemaname",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"tablename": {
+						"type": "string"
+					},
+					"schemaname": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ilhan/Day 2 - 140224"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-02-14T13:24:09Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_ASQL_Source')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_CSV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSQL_copy2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"schemaname": "Sales",
+										"tablename": "Orders"
+									},
+									"source2": {
+										"schemaname": "Sales",
+										"tablename": "Customers"
+									},
+									"sink1": {
+										"container": "sqloutput",
+										"filename": "dataflow.csv",
+										"foldername": "dataflow"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"tablename": {
+						"type": "string"
+					},
+					"schemaname": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ilhan/Day 2 - 140224"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-02-14T13:36:40Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ADLS_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "sqloutput",
+									"filename": "Orders.csv",
+									"foldername": "Sales"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "output",
+									"filename": "Sink_Customer.csv",
+									"foldername": "Sales"
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "ilhan/Day 1- 130224"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-02-14T12:58:21Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_CSV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1_copy1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_ADLS_CSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"container": "input",
+									"filename": {
+										"value": "@pipeline().parameters.filename",
+										"type": "Expression"
+									},
+									"foldername": "Sales"
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@activity('Get Metadata1').output.exists",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Fail1",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "It has failed file not found",
+										"errorCode": "1111"
+									}
+								},
+								{
+									"name": "Web1",
+									"type": "WebActivity",
+									"dependsOn": [
+										{
+											"activity": "Fail1",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"method": "POST",
+										"headers": {},
+										"url": "https://prod-17.uksouth.logic.azure.com:443/workflows/58be7e8cd3cc4178a543c2994dfd53cb/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XeV7ITrKLsb-ZaUH3dDYCRtTcTJ_Jv1_AnhA1egzuOM",
+										"body": {
+											"value": "{\n     \"FilePath\":\"filepathhhh\",\n     \"Message\":\"<b>error process failed message</b>\",\n     \"Subject\":\"error process failed subject\",\n     \"To\":\"ilhangursoy11@hotmail.com\" \n}",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_ADLS_CSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "sqloutput",
+												"filename": {
+													"value": "@pipeline().parameters.filename",
+													"type": "Expression"
+												},
+												"foldername": "Sales"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ADLS_CSV",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "output",
+												"filename": {
+													"value": "@pipeline().parameters.filename",
+													"type": "Expression"
+												},
+												"foldername": "Sales"
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"filename": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ilhan/Day 1- 130224"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-02-14T12:58:21Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_CSV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ADLS_CSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_CSV",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"container": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					},
+					"foldername": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().filename",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().foldername",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_CSV')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ASQL_Source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL_Source",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"schemaname": {
+						"type": "string"
+					},
+					"tablename": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "SQL"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schemaname",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tablename",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ASQL_Source')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ADLS_CSV')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('LS_ADLS_CSV_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('LS_ADLS_CSV_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LS_ASQL_Source')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_ASQL_Source_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/integrationRuntime1ilhan')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_ASQL_Source",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "DS_ASQL_Source",
+								"type": "DatasetReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_ADLS_CSV",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "join1"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          OrderID as integer,",
+						"          CustomerID as integer,",
+						"          SalespersonPersonID as integer,",
+						"          PickedByPersonID as integer,",
+						"          ContactPersonID as integer,",
+						"          BackorderOrderID as integer,",
+						"          OrderDate as date,",
+						"          ExpectedDeliveryDate as date,",
+						"          CustomerPurchaseOrderNumber as string,",
+						"          IsUndersupplyBackordered as boolean,",
+						"          Comments as string,",
+						"          DeliveryInstructions as string,",
+						"          InternalComments as string,",
+						"          PickingCompletedWhen as timestamp,",
+						"          LastEditedBy as integer,",
+						"          LastEditedWhen as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source1",
+						"source(output(",
+						"          CustomerID as integer,",
+						"          CustomerName as string,",
+						"          BillToCustomerID as integer,",
+						"          CustomerCategoryID as integer,",
+						"          BuyingGroupID as integer,",
+						"          PrimaryContactPersonID as integer,",
+						"          AlternateContactPersonID as integer,",
+						"          DeliveryMethodID as integer,",
+						"          DeliveryCityID as integer,",
+						"          PostalCityID as integer,",
+						"          CreditLimit as decimal(18,2),",
+						"          AccountOpenedDate as date,",
+						"          StandardDiscountPercentage as decimal(18,3),",
+						"          IsStatementSent as boolean,",
+						"          IsOnCreditHold as boolean,",
+						"          PaymentDays as integer,",
+						"          PhoneNumber as string,",
+						"          FaxNumber as string,",
+						"          DeliveryRun as string,",
+						"          RunPosition as string,",
+						"          WebsiteURL as string,",
+						"          DeliveryAddressLine1 as string,",
+						"          DeliveryAddressLine2 as string,",
+						"          DeliveryPostalCode as string,",
+						"          DeliveryLocation as binary,",
+						"          PostalAddressLine1 as string,",
+						"          PostalAddressLine2 as string,",
+						"          PostalPostalCode as string,",
+						"          LastEditedBy as integer,",
+						"          ValidFrom as timestamp,",
+						"          ValidTo as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source2",
+						"source1, source2 join(source1@CustomerID == source2@CustomerID,",
+						"     joinType:'outer',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1 select(mapColumn(",
+						"          CustomerName,",
+						"          CreditLimit,",
+						"          ValidFrom",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['dataflowoutput.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_ASQL_Source')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ADLS_CSV')]"
+			]
+		}
+	]
+}
